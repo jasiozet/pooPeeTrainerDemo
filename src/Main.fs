@@ -1,15 +1,11 @@
 module Main
 
-open Feliz
-open App
-open Browser.Dom
-open Fable.Core.JsInterop
+open Elmish
+open Elmish.React
 
 Fable.Core.JsInterop.importSideEffects "./index.css"
 
-console.log("Fable is up and running...");
-
-ReactDOM.render(
-    Components.HelloWorld(),
-    document.getElementById "feliz-app"
-)
+Program.mkSimple App.init App.update App.render
+|> Program.withConsoleTrace
+|> Program.withReactSynchronous "elmish-app"
+|> Program.run
