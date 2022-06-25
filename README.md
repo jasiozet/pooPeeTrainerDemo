@@ -1,5 +1,6 @@
 # Fable Feliz Feliz.DaisyUI Vite App
 
+[Demo](https://jasiozet.github.io/pooPeeTrainerDemo/)
 This is a template Fable project for me which uses [Vite](https://fable.io/Fable.Lit/docs/hmr.html) so you can easily get started and add your own code progressively.
 
 

@@ -4,47 +4,115 @@ open Feliz
 open Feliz.DaisyUI
 open Logic
 open System
+open Fable.SimpleJson
 
 type State = {
-    Count: int
     Pup : Pup
     Events : Event list
 }
 
 type Msg =
-    | Increment
-    | Decrement
+    | NewPoopEvent
+    | NewEatEvent
+    | NewPeeEvent
+    | NewWalkEvent
+    | NewSleepEvent
+    | NewPlayEvent
+    | ClearEvents
     | SaveState
 
-let defaultValue count =
-    if count = null then
-        0
-    else
-        count |> int
+let getBasicState =
+    {
+      Pup = {Name = "Lusia"; Birthday=DateOnly(2022,05,04); Gender=Female};
+      Events = []
+    }
 
-let storeStateInLocalStorage state =
-    Browser.WebStorage.localStorage.setItem("count", string(state.Count))
+let getEmojiForGender gender =
+    match gender with
+    | Male -> "♂️"
+    | Female -> "♀️"
+
+let getDogAgeInDays (currentDate:DateOnly) (birthday:DateOnly) =
+    currentDate.DayNumber - birthday.DayNumber
+
+let getDogAge birthday =
+    let now = DateTime.Now
+    let currentDate = DateOnly(now.Year, now.Month, now.Day)
+    getDogAgeInDays currentDate birthday
+
+let getFormattedDogAge birthday =
+    let daysTotal = getDogAge birthday
+    let weeks = daysTotal / 7
+    let days = daysTotal % 7
+    $"{weeks} weeks and {days} days old"
+
+let retrieveStateFromLocalStorage =
+    let jsonState = Browser.WebStorage.localStorage.getItem("state")
+    jsonState
+    |> Json.tryParseAs<State>
+    |> function
+        | Ok state ->
+            state
+        | _ -> getBasicState
+
+let inline storeStateInLocalStorage state =
+    let jsonState = Json.serialize state
+    Browser.WebStorage.localStorage.setItem("state", jsonState)
+
+let getNewPooEvent eventType =
+    {Time=DateTime.Now;Type=eventType}
 
 let init() =
-    {
-      Count = Browser.WebStorage.localStorage.getItem("count") |> defaultValue;
-      Pup = {Name = "Lusia"; Birthday=DateOnly(04,05,2022); Gender=Gender.Female};
-      Events = []
-    },
+    retrieveStateFromLocalStorage,
     Cmd.none
 
 let update (msg: Msg) (state: State): State * Cmd<Msg> =
     match msg with
-    | Increment ->
-        { state with Count = state.Count + 1 }, Cmd.ofMsg SaveState
-    | Decrement ->
-        { state with Count = state.Count - 1 }, Cmd.ofMsg SaveState
+    | NewPoopEvent -> {state with Events=(getNewPooEvent Poo)::state.Events}, Cmd.ofMsg SaveState
+    | NewSleepEvent -> {state with Events=(getNewPooEvent Sleep)::state.Events}, Cmd.ofMsg SaveState
+    | NewPeeEvent -> {state with Events=(getNewPooEvent Pee)::state.Events}, Cmd.ofMsg SaveState
+    | NewEatEvent -> {state with Events=(getNewPooEvent Eat)::state.Events}, Cmd.ofMsg SaveState
+    | NewPlayEvent -> {state with Events=(getNewPooEvent Play)::state.Events}, Cmd.ofMsg SaveState
+    | NewWalkEvent -> {state with Events=(getNewPooEvent Walk)::state.Events}, Cmd.ofMsg SaveState
     | SaveState ->
         storeStateInLocalStorage state
         state, Cmd.none
+    | ClearEvents -> {state with Events=[]}, Cmd.ofMsg SaveState
 
 let render (state: State) (dispatch: Msg -> unit) =
   Html.div [
+
+    Daisy.button.button [
+      prop.onClick (fun _ -> dispatch NewPoopEvent)
+      prop.text (GetIconForEventType Poo)
+    ]
+    Daisy.button.button [
+      prop.onClick (fun _ -> dispatch NewPeeEvent)
+      prop.text (GetIconForEventType Pee)
+    ]
+    Daisy.button.button [
+      prop.onClick (fun _ -> dispatch NewWalkEvent)
+      prop.text (GetIconForEventType Walk)
+    ]
+    Daisy.button.button [
+      prop.onClick (fun _ -> dispatch NewPlayEvent)
+      prop.text (GetIconForEventType Play)
+    ]
+    Daisy.button.button [
+      prop.onClick (fun _ -> dispatch NewEatEvent)
+      prop.text (GetIconForEventType Eat)
+    ]
+    Daisy.button.button [
+      prop.onClick (fun _ -> dispatch NewSleepEvent)
+      prop.text (GetIconForEventType Sleep)
+    ]
+
+    Daisy.button.button [
+      prop.onClick (fun _ -> dispatch ClearEvents)
+      prop.text ("🆑 Clear")
+    ]
+
+    // Pup info
     Html.div [
       prop.classes [ "w-96" ]
       prop.children [
@@ -53,27 +121,24 @@ let render (state: State) (dispatch: Msg -> unit) =
           card.full
           prop.children [
             Html.figure [
-              Html.text "🐕"
+              Html.img [prop.src "lusiaC.png"]
             ]
             Daisy.cardBody [
               prop.style [ style.alignItems.center ]
               prop.children [
-                Daisy.cardTitle state.Pup.Name
+                Daisy.cardTitle (state.Pup.Name + " " + getEmojiForGender state.Pup.Gender)
+                Daisy.cardTitle (getFormattedDogAge state.Pup.Birthday)
               ]
             ]
           ]
         ]
       ]
     ]
-    Daisy.button.button [
-      prop.onClick (fun _ -> dispatch Increment)
-      prop.text "Increment"
-    ]
 
-    Daisy.button.button [
-      prop.onClick (fun _ -> dispatch Decrement)
-      prop.text "Decrement"
-    ]
-
-    Html.h1 state.Count
+    for event in state.Events do
+        Html.div [
+            Html.text (GetIconForEventType event.Type)
+            let formattedTime = event.Time.ToString("dd.MM hh:mm")
+            Html.text ($" {formattedTime}")
+        ]
   ]
