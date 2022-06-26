@@ -18,7 +18,7 @@ type Msg =
     | NewWalkEvent
     | NewSleepEvent
     | NewPlayEvent
-    | ClearEvents
+    | DeleleteLastEvent
     | SaveState
 
 let getBasicState =
@@ -77,7 +77,7 @@ let update (msg: Msg) (state: State): State * Cmd<Msg> =
     | SaveState ->
         storeStateInLocalStorage state
         state, Cmd.none
-    | ClearEvents -> {state with Events=[]}, Cmd.ofMsg SaveState
+    | DeleleteLastEvent -> {state with Events= (List.tail state.Events)}, Cmd.ofMsg SaveState
 
 let render (state: State) (dispatch: Msg -> unit) =
   Html.div [
@@ -108,8 +108,8 @@ let render (state: State) (dispatch: Msg -> unit) =
     ]
 
     Daisy.button.button [
-      prop.onClick (fun _ -> dispatch ClearEvents)
-      prop.text ("🆑 Clear")
+      prop.onClick (fun _ -> dispatch DeleleteLastEvent)
+      prop.text ("❌ last")
     ]
 
     // Pup info
