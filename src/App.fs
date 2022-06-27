@@ -5,7 +5,7 @@ open Feliz.DaisyUI
 open Logic
 open System
 open Fable.SimpleJson
-open Feliz.Recharts
+open GraphHelper
 
 type PresentationType = EventStack | Graph
 
@@ -102,51 +102,6 @@ let notImplementedModal (text:string) =
       ]
     ]
   ]
-
-type EventForGraph = { time: string; pooCount: int; peeCount: int; playCount: int }
-
-let data = [
-  { time= "17:00"; pooCount= 2; playCount = 1; peeCount = 2 };
-  { time= "18:00"; pooCount= 1; playCount = 1; peeCount = 2 };
-  { time= "19:00"; pooCount= 2; playCount = 1; peeCount = 4 };
-  { time= "20:00"; pooCount= 0; playCount = 3; peeCount = 2 };
-  { time= "21:00"; pooCount= 0; playCount = 1; peeCount = 5 };
-  { time= "22:00"; pooCount= 0; playCount = 1; peeCount = 2 };
-]
-
-[<ReactComponent>]
-let charts() =
-  Recharts.barChart [
-        barChart.width 500
-        barChart.height 300
-        barChart.data data
-        barChart.children [
-            Recharts.cartesianGrid [ cartesianGrid.strokeDasharray(3, 3) ]
-            Recharts.xAxis [ xAxis.dataKey (fun e -> e.time) ]
-            Recharts.yAxis [ ]
-            Recharts.tooltip [ tooltip.cursor false ]
-            Recharts.legend [ legend.align.center ]
-            Recharts.bar [
-                bar.dataKey (fun e -> e.pooCount)
-                bar.fill "#8884d8"
-                bar.stackId "1"
-                bar.name "Poo"
-            ]
-            Recharts.bar [
-                bar.dataKey (fun e -> e.peeCount)
-                bar.fill "#82ca9d"
-                bar.stackId "1"
-                bar.name "Pee"
-            ]
-            Recharts.bar [
-                bar.dataKey (fun e -> e.playCount)
-                bar.fill "#82c000"
-                bar.stackId "1"
-                bar.name "Play"
-            ]
-        ]
-  ]
-
 
 let init() =
   retrieveStateFromLocalStorage,
@@ -247,8 +202,7 @@ let render (state: State) (dispatch: Msg -> unit) =
             ]
           else
             Html.div [
-              charts()
-              Daisy.labelText "🚧 👨‍💻 Work in progress! 👨‍💻 🚧"
+              charts(state.Events)
             ]
         ]
       ]

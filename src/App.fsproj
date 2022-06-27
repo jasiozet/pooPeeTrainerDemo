@@ -6,6 +6,7 @@
     <None Include="index.html" />
     <Compile Include="Extensions.fs" />
     <Compile Include="Logic.fs" />
+    <Compile Include="GraphHelper.fs" />
     <Compile Include="App.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
