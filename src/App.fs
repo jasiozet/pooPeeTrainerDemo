@@ -12,12 +12,7 @@ type State = {
 }
 
 type Msg =
-    | NewPoopEvent
-    | NewEatEvent
-    | NewPeeEvent
-    | NewWalkEvent
-    | NewSleepEvent
-    | NewPlayEvent
+    | NewEvent of EventType
     | DeleleteLastEvent
     | SaveState
 
@@ -59,7 +54,7 @@ let inline storeStateInLocalStorage state =
     let jsonState = Json.serialize state
     Browser.WebStorage.localStorage.setItem("state", jsonState)
 
-let getNewPooEvent eventType =
+let getNewEvent eventType =
     {Time=DateTime.Now;Type=eventType}
 
 let init() =
@@ -68,12 +63,7 @@ let init() =
 
 let update (msg: Msg) (state: State): State * Cmd<Msg> =
     match msg with
-    | NewPoopEvent -> {state with Events=(getNewPooEvent Poo)::state.Events}, Cmd.ofMsg SaveState
-    | NewSleepEvent -> {state with Events=(getNewPooEvent Sleep)::state.Events}, Cmd.ofMsg SaveState
-    | NewPeeEvent -> {state with Events=(getNewPooEvent Pee)::state.Events}, Cmd.ofMsg SaveState
-    | NewEatEvent -> {state with Events=(getNewPooEvent Eat)::state.Events}, Cmd.ofMsg SaveState
-    | NewPlayEvent -> {state with Events=(getNewPooEvent Play)::state.Events}, Cmd.ofMsg SaveState
-    | NewWalkEvent -> {state with Events=(getNewPooEvent Walk)::state.Events}, Cmd.ofMsg SaveState
+    | NewEvent eventType -> {state with Events=(getNewEvent eventType)::state.Events}, Cmd.ofMsg SaveState
     | SaveState ->
         storeStateInLocalStorage state
         state, Cmd.none
@@ -83,27 +73,27 @@ let render (state: State) (dispatch: Msg -> unit) =
   Html.div [
 
     Daisy.button.button [
-      prop.onClick (fun _ -> dispatch NewPoopEvent)
+      prop.onClick (fun _ -> dispatch (NewEvent Poo))
       prop.text (GetIconForEventType Poo)
     ]
     Daisy.button.button [
-      prop.onClick (fun _ -> dispatch NewPeeEvent)
+      prop.onClick (fun _ -> dispatch (NewEvent Pee))
       prop.text (GetIconForEventType Pee)
     ]
     Daisy.button.button [
-      prop.onClick (fun _ -> dispatch NewWalkEvent)
+      prop.onClick (fun _ -> dispatch (NewEvent Walk))
       prop.text (GetIconForEventType Walk)
     ]
     Daisy.button.button [
-      prop.onClick (fun _ -> dispatch NewPlayEvent)
+      prop.onClick (fun _ -> dispatch (NewEvent Play))
       prop.text (GetIconForEventType Play)
     ]
     Daisy.button.button [
-      prop.onClick (fun _ -> dispatch NewEatEvent)
+      prop.onClick (fun _ -> dispatch (NewEvent Eat))
       prop.text (GetIconForEventType Eat)
     ]
     Daisy.button.button [
-      prop.onClick (fun _ -> dispatch NewSleepEvent)
+      prop.onClick (fun _ -> dispatch (NewEvent Sleep))
       prop.text (GetIconForEventType Sleep)
     ]
 

@@ -9,7 +9,7 @@ type Pup = {
     Birthday : DateOnly
 }
 
-type EventType = Poo | Pee | PooPee | Play | Eat | Sleep | Walk
+type EventType = Poo | Pee  | Play | Eat | Sleep | Walk
 
 type Event = {
     Type : EventType
@@ -20,7 +20,6 @@ let GetIconForEventType eventType =
     match eventType with
     | Poo -> "💩"
     | Pee -> "💦"
-    | PooPee -> "💩💦"
     | Play -> "🥎"
     | Eat -> "🍖"
     | Sleep -> "💤"
