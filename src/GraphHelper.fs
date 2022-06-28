@@ -1,7 +1,6 @@
 module GraphHelper
 open Feliz
 open Logic
-open System
 open Feliz.Recharts
 
 type EventForGraph = {
@@ -22,7 +21,8 @@ let countSpecificType eventType eventList =
 let countTypesForEveryHour eventList =
   eventList
   |> groupByTheHour
-  |> List.map (fun (h,l) ->
+  |> List.sortBy (fun (h, _) -> h)
+  |> List.map (fun (h, l) ->
       {
         time=sprintf "%d:00" h;
         pooCount=(countSpecificType Poo l);
@@ -32,6 +32,15 @@ let countTypesForEveryHour eventList =
         sleepCount=(countSpecificType Sleep l);
         eatCount=(countSpecificType Eat l);
       })
+
+
+let rechartBarReusable (hexColor, barName, selectorFunction:EventForGraph->int) =
+  Recharts.bar [
+    bar.dataKey selectorFunction
+    bar.fill hexColor
+    bar.stackId "1"
+    bar.name barName
+  ]
 
 [<ReactComponent>]
 let charts(eventList : Event list) =
@@ -45,41 +54,7 @@ let charts(eventList : Event list) =
       Recharts.yAxis [ ]
       Recharts.tooltip [ tooltip.cursor false ]
       Recharts.legend [ legend.align.center ]
-      Recharts.bar [
-          bar.dataKey (fun e -> e.pooCount)
-          bar.fill "#A06528"
-          bar.stackId "1"
-          bar.name "Poo"
-      ]
-      Recharts.bar [
-          bar.dataKey (fun e -> e.peeCount)
-          bar.fill "#BAE1FF"
-          bar.stackId "1"
-          bar.name "Pee"
-      ]
-      Recharts.bar [
-          bar.dataKey (fun e -> e.playCount)
-          bar.fill "#FFB3BA"
-          bar.stackId "1"
-          bar.name "Play"
-      ]
-      Recharts.bar [
-          bar.dataKey (fun e -> e.walkCount)
-          bar.fill "#BAFFC9"
-          bar.stackId "1"
-          bar.name "Walk"
-      ]
-      Recharts.bar [
-          bar.dataKey (fun e -> e.eatCount)
-          bar.fill "#D11141"
-          bar.stackId "1"
-          bar.name "Eat"
-      ]
-      Recharts.bar [
-          bar.dataKey (fun e -> e.sleepCount)
-          bar.fill "#011F4B"
-          bar.stackId "1"
-          bar.name "Sleep"
-      ]
+      rechartBarReusable("#D3A625", "Poo", (fun e -> e.pooCount))
+      rechartBarReusable("#AE0001", "Eat", (fun e -> e.eatCount))
     ]
   ]
