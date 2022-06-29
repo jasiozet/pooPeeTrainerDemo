@@ -7,6 +7,9 @@
     <Compile Include="Extensions.fs" />
     <Compile Include="Logic.fs" />
     <Compile Include="GraphHelper.fs" />
+    <Compile Include="State.fs" />
+    <Compile Include="LocalStorage.fs" />
+    <Compile Include="DownloadUpload.fs" />
     <Compile Include="App.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>

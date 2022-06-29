@@ -1,21 +1,14 @@
 module App
-open Fable.Core.JsInterop
+
 open Elmish
 open Feliz
 open Feliz.DaisyUI
 open Logic
-open System
-open Fable.SimpleJson
 open GraphHelper
-
-type PresentationType = EventStack | Graph
-
-type State = {
-  Pup : Pup
-  Events : Event list
-  PresentationType : PresentationType
-  IsFileUploadVisible : bool
-}
+open State
+open LocalStorage
+open DownloadUpload
+open Fable.SimpleJson
 
 type Msg =
   | NewEvent of EventType
@@ -25,92 +18,26 @@ type Msg =
   | IsFileUploadVisible of bool
   | UploadState of string
 
-let getBasicState =
-  {
-    Pup = {Name = "Lusia"; Birthday=DateOnly(2022,05,04); Gender=Female};
-    PresentationType = EventStack;
-    Events = [];
-    IsFileUploadVisible = false;
-  }
-
-let getEmojiForGender gender =
-  match gender with
-  | Male -> "♂️"
-  | Female -> "♀️"
-
-let getDogAgeInDays (currentDate:DateOnly) (birthday:DateOnly) =
-  currentDate.DayNumber - birthday.DayNumber
-
-let getDogAge birthday =
-  let now = DateTime.Now
-  let currentDate = DateOnly(now.Year, now.Month, now.Day)
-  getDogAgeInDays currentDate birthday
-
-let getFormattedDogAge birthday =
-  let daysTotal = getDogAge birthday
-  let weeks = daysTotal / 7
-  let days = daysTotal % 7
-  $"{weeks} weeks and {days} days old"
-
-let tryParseState jsonState =
-  jsonState
-  |> Json.tryParseAs<State>
-  |> function
-    | Ok state ->
-        state
-    | _ -> getBasicState
-
-let retrieveStateFromLocalStorage =
-  Browser.WebStorage.localStorage.getItem("state")
-  |> tryParseState
-
-let inline storeStateInLocalStorage state =
-    let jsonState = Json.serialize state
-    Browser.WebStorage.localStorage.setItem("state", jsonState)
-
-let getNewEventNow eventType =
-    {Time=DateTime.Now;Type=eventType}
-
-let downLoad fileName fileContent =
-    let anchor = Browser.Dom.document.createElement "a"
-    let encodedContent = fileContent |> sprintf "data:text/plain;charset=utf-8,%s" |> Fable.Core.JS.encodeURI
-    anchor.setAttribute("href",  encodedContent)
-    anchor.setAttribute("download", fileName)
-    anchor.click()
-
 let ButtonForNewEvent dispatch eventType =
   Daisy.button.button [
     prop.onClick (fun _ -> dispatch (NewEvent eventType))
     prop.text (GetIconForEventType eventType)
   ]
 
-let handleFileEvent onLoad (fileEvent:Browser.Types.Event) =
-    let files:Browser.Types.FileList = !!fileEvent.target?files
-    if files.length > 0 then
-        let reader = Browser.Dom.FileReader.Create()
-        reader.onload <- (fun _ -> reader.result |> unbox |> onLoad)
-        reader.readAsText(files.[0])
-
-let createFileUpload onLoad =
-  Html.input [
-    prop.type'.file
-    prop.onChange (handleFileEvent onLoad)
-  ]
-
 let init() =
-  retrieveStateFromLocalStorage,
+  RetrieveStateFromLocalStorage,
   Cmd.none
 
 let update (msg: Msg) (state: State): State * Cmd<Msg> =
   match msg with
-  | NewEvent eventType -> {state with Events=(getNewEventNow eventType)::state.Events}, Cmd.ofMsg SaveState
+  | NewEvent eventType -> {state with Events=(GetNewEventNow eventType)::state.Events}, Cmd.ofMsg SaveState
   | SaveState ->
-      storeStateInLocalStorage state
+      StoreStateInLocalStorage state
       state, Cmd.none
   | DeleleteLastEvent -> {state with Events= (List.tail state.Events)}, Cmd.ofMsg SaveState
   | SwitchPresentationType presentationType -> {state with PresentationType=presentationType}, Cmd.none
   | IsFileUploadVisible isIt -> {state with IsFileUploadVisible=isIt}, Cmd.none
-  | UploadState s -> tryParseState s, Cmd.ofMsg (IsFileUploadVisible false)
+  | UploadState s -> TryParseState s, Cmd.ofMsg (IsFileUploadVisible false)
 
 let render (state: State) (dispatch: Msg -> unit) =
   Html.div [
@@ -154,8 +81,8 @@ let render (state: State) (dispatch: Msg -> unit) =
               Daisy.cardBody [
                 prop.style [ style.alignItems.center]
                 prop.children [
-                  Daisy.cardTitle (state.Pup.Name + " " + getEmojiForGender state.Pup.Gender)
-                  Daisy.cardTitle (getFormattedDogAge state.Pup.Birthday)
+                  Daisy.cardTitle (state.Pup.Name + " " + GetEmojiForGender state.Pup.Gender)
+                  Daisy.cardTitle (GetFormattedDogAge state.Pup.Birthday)
                 ]
               ]
             ]
@@ -174,7 +101,7 @@ let render (state: State) (dispatch: Msg -> unit) =
           prop.text ("📈 graph")
         ]
         Daisy.button.button [
-          prop.onClick (fun _ -> downLoad "pooPeeTrainer.json" (Json.serialize state))
+          prop.onClick (fun _ -> Download "pooPeeTrainer.json" (Json.serialize state))
           prop.text ("💾 save")
         ]
         Daisy.button.button [
@@ -182,7 +109,7 @@ let render (state: State) (dispatch: Msg -> unit) =
           prop.text ("📤 upload")
         ]
         if state.IsFileUploadVisible then
-          createFileUpload (fun x -> dispatch (UploadState x))
+          CreateFileUpload (fun x -> dispatch (UploadState x))
       ]
 
       //Event presentation:

@@ -9,20 +9,17 @@ type EventForGraph = {
   walkCount: int; eatCount: int; sleepCount: int;
 }
 
-let groupByTheHour eventList =
-  eventList
-  |> List.groupBy (fun e -> e.Time.Hour)
+let private groupByTheHour =
+  List.groupBy (fun e -> e.Time.Hour)
 
-let countSpecificType eventType eventList =
-  eventList
-  |> List.filter (fun e -> e.Type = eventType)
-  |> List.length
+let private countSpecificType eventType =
+  List.filter (fun e -> e.Type = eventType)
+  >> List.length
 
-let countTypesForEveryHour eventList =
-  eventList
-  |> groupByTheHour
-  |> List.sortBy (fun (h, _) -> h)
-  |> List.map (fun (h, l) ->
+let private countTypesForEveryHour =
+  groupByTheHour
+  >> List.sortBy (fun (h, _) -> h)
+  >> List.map (fun (h, l) ->
       {
         time=sprintf "%d:00" h;
         pooCount=(countSpecificType Poo l);
@@ -32,7 +29,6 @@ let countTypesForEveryHour eventList =
         sleepCount=(countSpecificType Sleep l);
         eatCount=(countSpecificType Eat l);
       })
-
 
 let rechartBarReusable (hexColor, barName, selectorFunction:EventForGraph->int) =
   Recharts.bar [
