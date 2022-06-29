@@ -1,4 +1,5 @@
 module App
+open Fable.Core.JsInterop
 open Elmish
 open Feliz
 open Feliz.DaisyUI
@@ -13,6 +14,7 @@ type State = {
   Pup : Pup
   Events : Event list
   PresentationType : PresentationType
+  IsFileUploadVisible : bool
 }
 
 type Msg =
@@ -20,12 +22,15 @@ type Msg =
   | DeleleteLastEvent
   | SwitchPresentationType of PresentationType
   | SaveState
+  | IsFileUploadVisible of bool
+  | UploadState of string
 
 let getBasicState =
   {
     Pup = {Name = "Lusia"; Birthday=DateOnly(2022,05,04); Gender=Female};
     PresentationType = EventStack;
-    Events = []
+    Events = [];
+    IsFileUploadVisible = false;
   }
 
 let getEmojiForGender gender =
@@ -47,14 +52,17 @@ let getFormattedDogAge birthday =
   let days = daysTotal % 7
   $"{weeks} weeks and {days} days old"
 
-let retrieveStateFromLocalStorage =
-  let jsonState = Browser.WebStorage.localStorage.getItem("state")
+let tryParseState jsonState =
   jsonState
   |> Json.tryParseAs<State>
   |> function
     | Ok state ->
         state
     | _ -> getBasicState
+
+let retrieveStateFromLocalStorage =
+  Browser.WebStorage.localStorage.getItem("state")
+  |> tryParseState
 
 let inline storeStateInLocalStorage state =
     let jsonState = Json.serialize state
@@ -103,6 +111,19 @@ let notImplementedModal (text:string) =
     ]
   ]
 
+let handleFileEvent onLoad (fileEvent:Browser.Types.Event) =
+    let files:Browser.Types.FileList = !!fileEvent.target?files
+    if files.length > 0 then
+        let reader = Browser.Dom.FileReader.Create()
+        reader.onload <- (fun _ -> reader.result |> unbox |> onLoad)
+        reader.readAsText(files.[0])
+
+let createFileUpload onLoad =
+  Html.input [
+    prop.type'.file
+    prop.onChange (handleFileEvent onLoad)
+  ]
+
 let init() =
   retrieveStateFromLocalStorage,
   Cmd.none
@@ -115,6 +136,8 @@ let update (msg: Msg) (state: State): State * Cmd<Msg> =
       state, Cmd.none
   | DeleleteLastEvent -> {state with Events= (List.tail state.Events)}, Cmd.ofMsg SaveState
   | SwitchPresentationType presentationType -> {state with PresentationType=presentationType}, Cmd.none
+  | IsFileUploadVisible isIt -> {state with IsFileUploadVisible=isIt}, Cmd.none
+  | UploadState s -> tryParseState s, Cmd.ofMsg (IsFileUploadVisible false)
 
 let render (state: State) (dispatch: Msg -> unit) =
   Html.div [
@@ -152,7 +175,7 @@ let render (state: State) (dispatch: Msg -> unit) =
                 Html.img [
                   mask.circle
                   prop.src "lusiaC.png"
-                  prop.onClick (fun _ -> Browser.Dom.window.alert("Try petting real Lusia 💛"))
+                  prop.onClick (fun _ -> Browser.Dom.window.alert("Try petting the real Lusia 💛"))
                 ]
               ]
               Daisy.cardBody [
@@ -181,7 +204,12 @@ let render (state: State) (dispatch: Msg -> unit) =
           prop.onClick (fun _ -> downLoad "pooPeeTrainer.json" (Json.serialize state))
           prop.text ("💾 save")
         ]
-        notImplementedModal "📤 upload"
+        Daisy.button.button [
+          prop.onClick (fun _ -> dispatch (IsFileUploadVisible true))
+          prop.text ("📤 upload")
+        ]
+        if state.IsFileUploadVisible then
+          createFileUpload (fun x -> dispatch (UploadState x))
       ]
 
       //Event presentation:
