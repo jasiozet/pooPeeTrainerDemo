@@ -5,6 +5,7 @@
 ## TODO:
 * Support other dogs, not only Lusia
 * Customize what is shown in the graphs (not only 🍖 & 💩)
+* Better structure
 
 ## Requirements to build locally
 
