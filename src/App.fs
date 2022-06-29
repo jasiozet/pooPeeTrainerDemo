@@ -84,33 +84,6 @@ let ButtonForNewEvent dispatch eventType =
     prop.text (GetIconForEventType eventType)
   ]
 
-let notImplementedModal (text:string) =
-  Html.div [
-    prop.style [style.display.inlineFlex]
-    prop.children [
-      Daisy.button.label [
-          prop.htmlFor "my-modal"
-          prop.text text
-      ]
-      Daisy.modalToggle [prop.id "my-modal"]
-      Daisy.modal [
-          prop.children [
-              Daisy.modalBox [
-                  Html.p "Not implemented yet"
-                  Html.p "🚧 👨‍💻 Work in progress! 👨‍💻 🚧"
-                  Daisy.modalAction [
-                      Daisy.button.label [
-                          prop.htmlFor "my-modal"
-                          button.primary
-                          prop.text "Close"
-                      ]
-                  ]
-              ]
-          ]
-      ]
-    ]
-  ]
-
 let handleFileEvent onLoad (fileEvent:Browser.Types.Event) =
     let files:Browser.Types.FileList = !!fileEvent.target?files
     if files.length > 0 then
