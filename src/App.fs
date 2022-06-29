@@ -230,7 +230,7 @@ let render (state: State) (dispatch: Msg -> unit) =
             ]
           else
             Html.div [
-              charts(state.Events)
+              Charts(state.Events)
             ]
         ]
       ]

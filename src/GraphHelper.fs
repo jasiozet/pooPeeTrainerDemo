@@ -43,7 +43,7 @@ let rechartBarReusable (hexColor, barName, selectorFunction:EventForGraph->int) 
   ]
 
 [<ReactComponent>]
-let charts(eventList : Event list) =
+let Charts(eventList : Event list) =
   Recharts.barChart [
     barChart.width 500
     barChart.height 300
