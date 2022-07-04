@@ -9,7 +9,7 @@ type Pup = {
     Birthday : DateOnly
 }
 
-type EventType = Poo | Pee  | Play | Eat | Sleep | Walk
+type EventType = Poo | Pee | Play | Eat | Sleep | Walk
 
 type Event = {
     Type : EventType
